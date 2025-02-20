@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Bharat Vaani</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: "Helvetica Neue", Arial, sans-serif;
+      background-color: #f2f2f2;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+    .left-panel {
+      width: 300px;
+      background-color: #fff;
+      padding: 20px;
+      box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    }
+    .branding {
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .branding img {
+      width: 50px;
+      height: 50px;
+      margin-right: 10px;
+    }
+    .branding h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+    .instructions {
+      margin-top: 20px;
+    }
+    .instructions h2 {
+      font-size: 18px;
+      margin-bottom: 10px;
+    }
+    .instructions ul {
+      list-style: disc;
+      padding-left: 20px;
+      font-size: 14px;
+      color: #333;
+    }
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      background-color: #fafafa;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .input-area {
+      width: 100%;
+      max-width: 800px;
+      display: flex;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+    .input-area input[type="text"] {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    .input-area button {
+      padding: 10px 15px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 5px;
+    }
+    .input-area button:hover {
+      background-color: #0056b3;
+    }
+
+    .mic-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      outline: none;
+      margin-right: 5px;
+    }
+    .mic-btn img {
+      width: 24px;
+      height: 24px;
+    }
+
+
+    /* Chat output area */
+    .chat-output {
+      width: 100%;
+      max-width: 800px;
+    }
+    .chat-box {
+      background-color: #ffe0cc;
+      border-radius: 10px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+    .chat-box h3 {
+      margin: 0 0 10px 0;
+      font-size: 16px;
+    }
+    .chat-box .answer {
+      font-size: 14px;
+      line-height: 1.5;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Left Panel -->
+    <div class="left-panel">
+      <div class="branding">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/55/Emblem_of_India.svg/1200px-Emblem_of_India.svg.png" alt="Emblem of India" />
+        <h1>Bharat Vaani</h1>
+      </div>
+      <div class="instructions">
+        <h2>How to Use the AI</h2>
+        <ul>
+          {% for point in how_to_use %}
+            <li>{{ point }}</li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+    
+    <!-- Main Content -->
+    <div class="main-content">
+      <form class="input-area" method="post" action="/">
+        <input type="text" name="query" placeholder="Ask your query..." value="{{ user_query }}" />
+        <button type="button" class="mic-btn" id="micButton" title="Start Voice Input">
+          <img src="https://www.iconpacks.net/icons/1/free-microphone-icon-342-thumb.png" alt="Mic Icon" />
+        </button>
+        <button type="submit">SUBMIT</button>
+      </form>
+      
+      <!-- Chat Output Area (answers below) -->
+      <div class="chat-output">
+        <div class="chat-box">
+          <h3>Q: {{ user_query }}</h3>
+          <div class="answer">
+            {{ answer | safe }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Voice input using Web Speech API -->
+  <script>
+    window.SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.lang = "mr-IN"; // Marathi language
+    recognition.continuous = true;
+    recognition.interimResults = false;
+
+    let recording = false;
+    let recordTimeout;
+
+    const micButton = document.getElementById("micButton");
+    const queryInput = document.querySelector("input[name='query']");
+
+    micButton.addEventListener("click", () => {
+      if (!recording) {
+        startRecording();
+      } else {
+        stopRecording();
+      }
+    });
+
+    function startRecording() {
+      recognition.start();
+      recording = true;
+      micButton.title = "Stop Voice Input";
+      recordTimeout = setTimeout(stopRecording, 600000); // Stop after 10 minutes
+    }
+
+    function stopRecording() {
+      recognition.stop();
+      recording = false;
+      micButton.title = "Start Voice Input";
+      clearTimeout(recordTimeout);
+    }
+
+    recognition.onresult = function(event) {
+      let transcript = "";
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+      }
+      queryInput.value = transcript;
+    };
+
+    recognition.onerror = function(event) {
+      console.error("Speech recognition error:", event.error);
+    };
+  </script>
+</body>
+</html>
